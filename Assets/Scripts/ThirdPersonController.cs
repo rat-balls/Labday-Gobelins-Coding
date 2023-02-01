@@ -46,6 +46,22 @@ namespace StarterAssets
         [Tooltip("Time required to pass before entering the fall state. Useful for walking down stairs")]
         public float FallTimeout = 0f;
 
+        [Header("Ledge Grab")]
+        [Tooltip("If the character is grounded or not. Not part of the CharacterController built in grounded check")]
+        public bool LedgeGrab = false;
+
+        [Tooltip("The radius of the ledge check. Should match the radius of the CharacterController")]
+        public float LedgeRadius = 0.28f;
+
+        
+        [Tooltip("I don't know what it do")]
+        public float LedgeOffset = -0.14f;
+
+        [Tooltip("What layers the character uses as ledges")]
+        public LayerMask LedgeLayers;
+        public LayerMask GrabHitbox;
+
+
         [Header("Player Grounded")]
         [Tooltip("If the character is grounded or not. Not part of the CharacterController built in grounded check")]
         public bool Grounded = true;
@@ -81,6 +97,7 @@ namespace StarterAssets
 
         // player
         private float _speed;
+        private bool Hanging = false;
         private float _animationBlend;
         private float _targetRotation = 0.0f;
         private float _rotationVelocity;
@@ -158,6 +175,8 @@ namespace StarterAssets
 
             JumpAndGravity();
             GroundedCheck();
+            LedgeGrabCheck();
+            Use();
             Move();
         }
 
@@ -187,6 +206,34 @@ namespace StarterAssets
             if (_hasAnimator)
             {
                 _animator.SetBool(_animIDGrounded, Grounded);
+            }
+        }
+
+        private void LedgeGrabCheck()
+        {
+            // set sphere position, with offset
+            Vector3 spherePosition = new Vector3(transform.position.x, transform.position.y * 2,
+                transform.position.z);
+            LedgeGrab = Physics.CheckSphere(spherePosition, LedgeRadius, LedgeLayers);
+
+        }
+
+        private void Use()
+        {
+            if(_input.use){
+                Debug.Log("E");
+                if(LedgeGrab){
+                    if(!Hanging){
+                        Hanging = true;
+                    } else if (Hanging) {
+                        Hanging = false;
+                    }
+                    
+                }
+            }
+
+            if(Hanging && LedgeGrab){
+                _verticalVelocity = 0f;
             }
         }
 
@@ -303,7 +350,9 @@ namespace StarterAssets
                 if (_input.jump && _jumpTimeoutDelta <= 0.0f)
                 {
                     // the square root of H * -2 * G = how much velocity needed to reach desired height
+                    
                     _verticalVelocity = Mathf.Sqrt(JumpHeight * -2f * Gravity);
+                    
 
                     // update animator if using character
                     if (_hasAnimator)
