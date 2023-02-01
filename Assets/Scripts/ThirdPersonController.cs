@@ -232,7 +232,7 @@ namespace StarterAssets
                 }
             }
 
-            if(Hanging && LedgeGrab){
+            if(LedgeGrab && !Grounded){
                 _verticalVelocity = 0f;
             }
         }
